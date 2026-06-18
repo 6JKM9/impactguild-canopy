@@ -1,108 +1,107 @@
-<img src="./canopy-logo-white-bg.svg" alt="Canopy Logo" width="500"/>
+# VibeGraph - On-Chain Social Reputation Graph
 
-_Official golang implementation of the Canopy Network Protocol_
+**One-line pitch:** VibeGraph turns community thanks into portable onchain reputation.
 
-[![GoDoc](https://img.shields.io/badge/godoc-reference-white.svg)](https://godoc.org/github.com/canopy-network/canopy)
-[![Getting Started](https://img.shields.io/badge/getting%20started-guide-white)](https://canopynetwork.org)
-[![Go Version](https://img.shields.io/badge/golang-v1.21-white.svg)](https://golang.org)
-[![Next.js Version](https://img.shields.io/badge/next%20js-v14.2.3-white.svg)](https://nextjs.org/)
+VibeGraph is a Social-Fi appchain built with the Canopy TypeScript plugin template. Users register onchain social profiles, then give each other signed reputation attestations called "vibes" for useful community work. Each vibe is stored as onchain state and updates the receiver's portable reputation score.
 
+## Features
 
-# Overview
+### Onchain Social Profiles
 
-[![License](https://img.shields.io/badge/License-MIT-white.svg)](https://opensource.org/licenses/MIT)
-[![Testing](https://img.shields.io/badge/testing-docker%20compose-white)](https://docs.docker.com/compose/)
-[![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos-white.svg)](https://github.com/canopy-network/canopy/releases)
-[![Status](https://img.shields.io/badge/status-alphanet-white)](https://docs.docker.com/compose/)
+- Register a profile with a unique handle and bio.
+- Store profile data directly in Canopy plugin state.
+- Track reputation score, vibes given, and vibes received.
 
-### ⫸ **Welcome to the Network that Powers the Peer-to-Peer Launchpad for New Chains**
+### Give Vibe Transaction
 
-Built on a recursive architecture, chains bootstrap each other into independence —  
-forming an `unstoppable` web of utility and security. 
+- Send signed reputation points to another registered profile.
+- Add a tag like `mentor`, `builder`, `artist`, or `moderator`.
+- Attach a short note explaining why the reputation was given.
 
-**Here you'll find:**
+### Reputation Attestations
 
-➪ A recursive framework to build blockchains.
+- Every vibe is stored as an onchain attestation.
+- Tracks sender, receiver, amount, tag, note, and height.
+- Builds a portable social graph of community trust.
 
-➪ The seed chain that started the recursive cycle.
+### Custom Canopy Plugin
 
-For more information on the Canopy Network Protocol visit [https://canopynetwork.org](https://canopynetwork.org)
+VibeGraph is implemented inside the official Canopy TypeScript plugin template.
 
-## Network Status
+Custom transaction types:
 
-⪢ Canopy is in `Betanet` 🚀 ➝ learn more about the [road-to-mainnet](https://www.canopynetwork.org/learn-more/road-to-mainnet)
+- `register_profile`
+- `give_vibe`
 
-## Protocol Documentation
+Custom state types:
 
-➪ Check out the Canopy Network wiki:  [https://canopy-network.gitbook.io/docs](https://canopy-network.gitbook.io/docs)
+- `SocialProfile`
+- `VibeAttestation`
+- `VibeCounter`
 
-## Repository Documentation
+## Project Files
 
-Welcome to the Canopy Network reference implementation. This repository can be well understood reading about the core modules:
+- Plugin code: `plugin/typescript/src/contract/contract.ts`
+- Custom protobufs: `plugin/typescript/proto/tx.proto`
+- RPC demo script: `plugin/typescript/demo/vibegraph_demo.ts`
+- Visual dashboard: `plugin/typescript/demo/vibegraph_dashboard.html`
+- Video demo page: `plugin/typescript/demo/vibegraph_video_demo.html`
+- Submission notes: `plugin/typescript/SUBMISSION.md`
 
-- [Controller](controller/README.md): Coordinates communication between all the major parts of the Canopy blockchain, like a central hub or "bus" that connects the system together.
-- [Finite State Machine (FSM)](fsm/README.md): Defines the logic for how transactions change the blockchain's state — it decides what’s valid and how state transitions happen from one block to the next.
-- [Byzantine Fault Tolerant (BFT) Consensus](bft/README.md): A consensus mechanism that allows the network to agree on new blocks even if some nodes are unreliable or malicious.
-- [Peer-to-Peer Networking](p2p/README.md): A secure and encrypted communication system that lets nodes talk directly to each other without needing a central server.
-- [Persistence](store/README.md): Manages the blockchain’s storage — it saves the current state (ledger), indexes past transactions, and ensures fast and reliable data verification.
-
-## How to Run It
-
-➪ To run the Canopy binary, use the following commands:
-
-```bash
-make build/canopy-full
-canopy start
-```
-
-## How to Run It with 🐳 Docker
-
-➪ To run a Canopy `Localnet` in a *containerized* environment, use the following commands:
-```bash
-make docker/build
-make docker/up-fast
-make docker/logs
-
-or simply
-
-make docker/up && make docker/logs
-```
-
-## Running Tests
-
-➪ To run Canopy unit tests, use the Go testing tools:
+## Run The Plugin
 
 ```bash
-make test
+cd plugin/typescript
+npm install
+npm run build:all
 ```
 
-## How to Contribute
+## Run The Local RPC Demo
 
-➪ Canopy is an open-source project, and we welcome contributions from the community. Here's how to get involved:
+The RPC demo requires a local Canopy chain running with the TypeScript plugin enabled.
 
-1. **Fork** the repository and clone it locally.
-2. **Code** your improvements or fixes.
-3. **Submit a Pull Request** (PR) for review.
+```bash
+cd plugin/typescript
+npm run demo:vibegraph
+```
 
-➣ Please follow these [guidelines](CONTRIBUTING.md) to maintain high-quality contributions:
+The demo uses:
 
-### High Impact or Architectural Changes
+- `50002` for Canopy transaction/query RPC
+- `50003` for local admin keystore RPC
 
-➪ Before making large changes, discuss them with the Canopy team on [Discord](https://discord.gg/pNcSJj7Wdh) to ensure alignment.
+## Demo Story
 
-### Coding Style
+1. Alice registers an onchain profile.
+2. Bob registers an onchain profile.
+3. Alice gives Bob `42` vibe points tagged `mentor`.
+4. Bob's reputation score increases.
+5. The transaction is confirmed through local Canopy RPC.
 
-- Code must adhere to official Go formatting (use [`gofmt`](https://golang.org/cmd/gofmt)).
-- (Optional) Use [EditorConfig](https://editorconfig.org) for consistent formatting.
-- All code should follow Go documentation/commentary guidelines.
-- PRs should be opened against the `development` branch.
+## Contest Submission Text
 
-[![Pre-Release](https://img.shields.io/github/release-pre/canopy-network/canopy.svg)](https://github.com/canopy-network/canopy/releases)
-[![Go Report Card](https://goreportcard.com/badge/github.com/canopy-network/canopy)](https://goreportcard.com/report/github.com/canopy-network/canopy)
-[![Contributors](https://img.shields.io/github/contributors/canopy-network/canopy.svg)](https://github.com/canopy-network/canopy/pulse)
-[![Last Commit](https://img.shields.io/github/last-commit/canopy-network/canopy.svg)](https://github.com/canopy-network/canopy/pulse)
+```text
+VibeGraph - On-Chain Social Reputation Graph
 
-## Contact
+Pitch: VibeGraph turns community thanks into portable onchain reputation.
 
-[![Twitter](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://x.com/CNPYNetwork)
-[![Discord](https://img.shields.io/badge/discord-online-blue.svg)](https://discord.gg/pNcSJj7Wdh)
+VibeGraph is a Social-Fi appchain built with the Canopy TypeScript template. Users register onchain profiles, then give each other signed "vibes" for useful community work. Each vibe is stored as an onchain reputation attestation and updates the receiver's portable reputation score.
+
+Custom txs:
+- register_profile
+- give_vibe
+
+Features:
+- Onchain social profiles
+- Signed reputation attestations
+- Vibe score tracking
+- Contributor trust graph
+- Local Canopy RPC demo through ports 50002 / 50003
+```
+
+## Built With
+
+- Canopy Network
+- Canopy TypeScript plugin template
+- Protocol Buffers
+- Node.js / TypeScript
