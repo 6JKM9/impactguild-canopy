@@ -46,11 +46,22 @@ Discord communities, DAOs, and builder ecosystems all have the same problem: the
 
 ## Project Files
 
+- Live app entrypoint: `docs/index.html`
 - Plugin contract: `plugin/typescript/src/contract/contract.ts`
 - Custom protobufs: `plugin/typescript/proto/tx.proto`
 - RPC demo script: `plugin/typescript/demo/impactguild_demo.ts`
 - Visual dashboard: `plugin/typescript/demo/impactguild_dashboard.html`
 - Submission notes: `plugin/typescript/SUBMISSION.md`
+
+## Live App
+
+GitHub Pages can serve the frontend from:
+
+```text
+https://6jkm9.github.io/impactguild-canopy/
+```
+
+The live page is the public product demo. The local RPC demo remains the onchain proof for the contest because it submits custom Canopy transactions through ports `50002 / 50003`.
 
 ## Run The Plugin
 
