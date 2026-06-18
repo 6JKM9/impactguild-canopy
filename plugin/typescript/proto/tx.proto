@@ -63,6 +63,72 @@ message MessageGiveVibe {
   string note = 5;
 }
 
+// MessageCreateGuild creates a community workspace with its own quests, badges, and gates.
+message MessageCreateGuild {
+  bytes creator_address = 1; // @gotags: json:"creatorAddress"
+  string slug = 2;
+  string name = 3;
+  string description = 4;
+}
+
+// MessagePostQuest publishes a contribution opportunity inside a guild.
+message MessagePostQuest {
+  bytes creator_address = 1; // @gotags: json:"creatorAddress"
+  uint64 guild_id = 2; // @gotags: json:"guildId"
+  string title = 3;
+  string tag = 4;
+  uint64 reward_rep = 5; // @gotags: json:"rewardRep"
+}
+
+// MessageSubmitProof records a contributor's proof-of-work for a quest.
+message MessageSubmitProof {
+  bytes contributor_address = 1; // @gotags: json:"contributorAddress"
+  uint64 guild_id = 2; // @gotags: json:"guildId"
+  uint64 quest_id = 3; // @gotags: json:"questId"
+  string proof_uri = 4; // @gotags: json:"proofURI"
+  string note = 5;
+}
+
+// MessageAttestContribution approves proof and mints contributor reputation.
+message MessageAttestContribution {
+  bytes reviewer_address = 1; // @gotags: json:"reviewerAddress"
+  uint64 proof_id = 2; // @gotags: json:"proofId"
+  uint64 amount = 3;
+  string note = 4;
+}
+
+// MessageIssueBadge mints a portable badge to a contributor.
+message MessageIssueBadge {
+  bytes issuer_address = 1; // @gotags: json:"issuerAddress"
+  bytes to_address = 2; // @gotags: json:"toAddress"
+  uint64 guild_id = 3; // @gotags: json:"guildId"
+  string badge_name = 4; // @gotags: json:"badgeName"
+  string badge_uri = 5; // @gotags: json:"badgeURI"
+}
+
+// MessageCreateGate defines a reputation/badge access rule.
+message MessageCreateGate {
+  bytes creator_address = 1; // @gotags: json:"creatorAddress"
+  uint64 guild_id = 2; // @gotags: json:"guildId"
+  string gate_name = 3; // @gotags: json:"gateName"
+  uint64 required_rep = 4; // @gotags: json:"requiredRep"
+  string required_badge = 5; // @gotags: json:"requiredBadge"
+}
+
+// MessageCheckGateAccess stores a gate-check result for a profile.
+message MessageCheckGateAccess {
+  bytes visitor_address = 1; // @gotags: json:"visitorAddress"
+  uint64 gate_id = 2; // @gotags: json:"gateId"
+}
+
+// MessageCastReputationVote records a contribution-weighted governance vote.
+message MessageCastReputationVote {
+  bytes voter_address = 1; // @gotags: json:"voterAddress"
+  uint64 guild_id = 2; // @gotags: json:"guildId"
+  string proposal_id = 3; // @gotags: json:"proposalId"
+  string choice = 4;
+}
+
 // SocialProfile is plugin state for a social identity and reputation score.
 message SocialProfile {
   bytes owner_address = 1; // @gotags: json:"ownerAddress"
@@ -91,6 +157,105 @@ message VibeCounter {
   uint64 next_id = 1; // @gotags: json:"nextId"
 }
 
+message Guild {
+  uint64 id = 1;
+  bytes creator_address = 2; // @gotags: json:"creatorAddress"
+  string slug = 3;
+  string name = 4;
+  string description = 5;
+  uint64 member_count = 6; // @gotags: json:"memberCount"
+  uint64 total_reputation = 7; // @gotags: json:"totalReputation"
+  uint64 created_height = 8; // @gotags: json:"createdHeight"
+}
+
+message GuildCounter {
+  uint64 next_id = 1; // @gotags: json:"nextId"
+}
+
+message Quest {
+  uint64 id = 1;
+  uint64 guild_id = 2; // @gotags: json:"guildId"
+  bytes creator_address = 3; // @gotags: json:"creatorAddress"
+  string title = 4;
+  string tag = 5;
+  uint64 reward_rep = 6; // @gotags: json:"rewardRep"
+  bool open = 7;
+  uint64 created_height = 8; // @gotags: json:"createdHeight"
+}
+
+message QuestCounter {
+  uint64 next_id = 1; // @gotags: json:"nextId"
+}
+
+message ContributionProof {
+  uint64 id = 1;
+  uint64 guild_id = 2; // @gotags: json:"guildId"
+  uint64 quest_id = 3; // @gotags: json:"questId"
+  bytes contributor_address = 4; // @gotags: json:"contributorAddress"
+  string proof_uri = 5; // @gotags: json:"proofURI"
+  string note = 6;
+  string status = 7;
+  uint64 created_height = 8; // @gotags: json:"createdHeight"
+  uint64 reviewed_height = 9; // @gotags: json:"reviewedHeight"
+}
+
+message ProofCounter {
+  uint64 next_id = 1; // @gotags: json:"nextId"
+}
+
+message GuildBadge {
+  uint64 id = 1;
+  uint64 guild_id = 2; // @gotags: json:"guildId"
+  bytes issuer_address = 3; // @gotags: json:"issuerAddress"
+  bytes to_address = 4; // @gotags: json:"toAddress"
+  string badge_name = 5; // @gotags: json:"badgeName"
+  string badge_uri = 6; // @gotags: json:"badgeURI"
+  uint64 issued_height = 7; // @gotags: json:"issuedHeight"
+}
+
+message BadgeCounter {
+  uint64 next_id = 1; // @gotags: json:"nextId"
+}
+
+message AccessGate {
+  uint64 id = 1;
+  uint64 guild_id = 2; // @gotags: json:"guildId"
+  string gate_name = 3; // @gotags: json:"gateName"
+  uint64 required_rep = 4; // @gotags: json:"requiredRep"
+  string required_badge = 5; // @gotags: json:"requiredBadge"
+  uint64 created_height = 6; // @gotags: json:"createdHeight"
+}
+
+message GateCounter {
+  uint64 next_id = 1; // @gotags: json:"nextId"
+}
+
+message GateAccess {
+  uint64 id = 1;
+  uint64 gate_id = 2; // @gotags: json:"gateId"
+  bytes visitor_address = 3; // @gotags: json:"visitorAddress"
+  bool passed = 4;
+  uint64 checked_height = 5; // @gotags: json:"checkedHeight"
+}
+
+message GateAccessCounter {
+  uint64 next_id = 1; // @gotags: json:"nextId"
+}
+
+message ReputationVote {
+  uint64 id = 1;
+  uint64 guild_id = 2; // @gotags: json:"guildId"
+  string proposal_id = 3; // @gotags: json:"proposalId"
+  bytes voter_address = 4; // @gotags: json:"voterAddress"
+  string choice = 5;
+  uint64 weight = 6;
+  uint64 height = 7;
+}
+
+message VoteCounter {
+  uint64 next_id = 1; // @gotags: json:"nextId"
+}
+
 // FeeParams is the parameter space that defines various amounts for transaction fees
 message FeeParams {
   // send_fee: is the fee amount (in uCNPY) for Message Send
@@ -99,7 +264,15 @@ message FeeParams {
   uint64 register_profile_fee = 14; // @gotags: json:"registerProfileFee"
   // give_vibe_fee: minimum fee for MessageGiveVibe
   uint64 give_vibe_fee = 15; // @gotags: json:"giveVibeFee"
-  // NO CONFLICT STARTING AT FIELD = 16
+  uint64 create_guild_fee = 16; // @gotags: json:"createGuildFee"
+  uint64 post_quest_fee = 17; // @gotags: json:"postQuestFee"
+  uint64 submit_proof_fee = 18; // @gotags: json:"submitProofFee"
+  uint64 attest_contribution_fee = 19; // @gotags: json:"attestContributionFee"
+  uint64 issue_badge_fee = 20; // @gotags: json:"issueBadgeFee"
+  uint64 create_gate_fee = 21; // @gotags: json:"createGateFee"
+  uint64 check_gate_access_fee = 22; // @gotags: json:"checkGateAccessFee"
+  uint64 cast_reputation_vote_fee = 23; // @gotags: json:"castReputationVoteFee"
+  // NO CONFLICT STARTING AT FIELD = 24
 }
 
 // A Signature is a digital signature is a cryptographic "fingerprint" created with a private key,

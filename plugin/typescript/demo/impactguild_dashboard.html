@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ImpactGuild Demo Dashboard</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080b10;
+      --panel: #111820;
+      --panel-2: #162231;
+      --line: #263444;
+      --text: #f7fbff;
+      --muted: #9eabb8;
+      --cyan: #19d3ff;
+      --green: #39e58c;
+      --yellow: #ffd166;
+      --violet: #a879ff;
+      --red: #ff6b6b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(120deg, rgba(25, 211, 255, 0.12), transparent 38%),
+        linear-gradient(230deg, rgba(57, 229, 140, 0.09), transparent 42%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    main {
+      width: min(1200px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+    }
+
+    .mark {
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(25, 211, 255, 0.7);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #0e1b25;
+      color: var(--cyan);
+      box-shadow: 0 0 24px rgba(25, 211, 255, 0.22);
+    }
+
+    .rpc {
+      color: var(--muted);
+      font-size: 13px;
+      border: 1px solid var(--line);
+      padding: 9px 12px;
+      border-radius: 8px;
+      background: rgba(17, 24, 32, 0.8);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: rgba(17, 24, 32, 0.9);
+      border-radius: 8px;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+    }
+
+    .hero {
+      padding: 26px;
+      min-height: 315px;
+      display: grid;
+      align-content: space-between;
+      gap: 22px;
+    }
+
+    .eyebrow {
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: clamp(38px, 6vw, 72px);
+      line-height: 0.95;
+      margin: 8px 0 12px;
+      letter-spacing: 0;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.55;
+      margin: 0;
+      max-width: 680px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 14px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      color: #041015;
+      background: var(--green);
+    }
+
+    button.secondary {
+      color: var(--text);
+      background: #1a2634;
+      border: 1px solid var(--line);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      padding: 16px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #0d141c;
+      min-height: 86px;
+    }
+
+    .stat small {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .stat strong {
+      font-size: 26px;
+    }
+
+    .workflow {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 16px;
+    }
+
+    .section {
+      padding: 18px;
+    }
+
+    h2 {
+      font-size: 16px;
+      margin: 0 0 14px;
+    }
+
+    .steps {
+      display: grid;
+      gap: 10px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      background: #0d141c;
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .num {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #14293a;
+      color: var(--cyan);
+      font-weight: 900;
+    }
+
+    .step b {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .step span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .pill {
+      border: 1px solid rgba(57, 229, 140, 0.45);
+      color: var(--green);
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .profiles {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .profile {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #0d141c;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 10px;
+      font-weight: 900;
+      background: #15283a;
+      color: var(--cyan);
+    }
+
+    .meter {
+      height: 8px;
+      background: #0a0f15;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .meter i {
+      display: block;
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan), var(--green));
+      transition: width 0.5s ease;
+    }
+
+    .feed {
+      display: grid;
+      gap: 8px;
+      max-height: 312px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .event {
+      border: 1px solid var(--line);
+      background: #0d141c;
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .event b {
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .event code {
+      color: var(--cyan);
+      font-size: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .grid,
+      .workflow {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="topbar">
+      <div class="brand">
+        <div class="mark">IG</div>
+        <div>
+          <div>ImpactGuild</div>
+          <small style="color: var(--muted);">Social-Fi appchain on Canopy</small>
+        </div>
+      </div>
+      <div class="rpc">Local RPC proof: 50002 query / 50003 admin</div>
+    </div>
+
+    <div class="grid">
+      <section class="hero panel">
+        <div>
+          <div class="eyebrow">Onchain contribution reputation</div>
+          <h1>Earn access by proving real work.</h1>
+          <p>ImpactGuild lets communities create guilds, post quests, review proof, mint badges, unlock gated spaces, and vote with earned reputation.</p>
+        </div>
+        <div class="actions">
+          <button id="runFlow">Run Example Flow</button>
+          <button class="secondary" id="submitProof">Submit Example Proof</button>
+          <button class="secondary" id="reset">Reset</button>
+        </div>
+      </section>
+
+      <aside class="panel stats">
+        <div class="stat"><small>Custom tx types</small><strong id="txCount">10</strong></div>
+        <div class="stat"><small>Guilds</small><strong id="guilds">0</strong></div>
+        <div class="stat"><small>Proofs reviewed</small><strong id="proofs">0</strong></div>
+        <div class="stat"><small>Bob reputation</small><strong id="rep">0</strong></div>
+      </aside>
+
+      <section class="workflow">
+        <div class="panel section">
+          <h2>Onchain Demo Flow</h2>
+          <div class="steps" id="steps"></div>
+        </div>
+
+        <div class="panel section">
+          <h2>Profiles & Gate</h2>
+          <div class="profiles">
+            <div class="profile">
+              <div class="avatar">A</div>
+              <b>Alice</b>
+              <p>Guild creator and reviewer</p>
+              <div class="meter"><i id="aliceMeter"></i></div>
+            </div>
+            <div class="profile">
+              <div class="avatar">B</div>
+              <b>Bob</b>
+              <p>Builder earning access</p>
+              <div class="meter"><i id="bobMeter"></i></div>
+            </div>
+          </div>
+          <div class="feed" id="feed"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const events = [
+      ["register_profile", "Alice profile registered", "@alice owns a reviewer profile"],
+      ["register_profile", "Bob profile registered", "@bob owns a builder profile"],
+      ["create_guild", "Canopy Builders guild created", "Guild slug: canopy-builders"],
+      ["post_quest", "Quest posted", "Build and demo a Social-Fi appchain"],
+      ["submit_proof", "Bob submitted proof", "GitHub/demo link stored onchain"],
+      ["attest_contribution", "Alice approved Bob's proof", "+120 reputation minted"],
+      ["issue_badge", "Verified Builder badge issued", "Badge: verified_builder"],
+      ["create_gate", "VIP Builders gate created", "Requires 100 rep + badge"],
+      ["check_gate_access", "Bob passed the gate", "Access result stored"],
+      ["cast_reputation_vote", "Bob voted with reputation", "Proposal: launch-builder-bounties"]
+    ];
+
+    const state = { index: 0, guilds: 0, proofs: 0, rep: 0 };
+    const steps = document.getElementById("steps");
+    const feed = document.getElementById("feed");
+
+    function renderSteps() {
+      steps.innerHTML = events.map((item, index) => `
+        <div class="step">
+          <div class="num">${index + 1}</div>
+          <div><b>${item[1]}</b><span>${item[2]}</span></div>
+          <div class="pill">${index < state.index ? "confirmed" : "pending"}</div>
+        </div>
+      `).join("");
+    }
+
+    function addEvent(item) {
+      const node = document.createElement("div");
+      node.className = "event";
+      node.innerHTML = `<b>${item[1]}</b><span>${item[2]}</span><code>${item[0]}</code>`;
+      feed.prepend(node);
+    }
+
+    function syncStats() {
+      document.getElementById("guilds").textContent = state.guilds;
+      document.getElementById("proofs").textContent = state.proofs;
+      document.getElementById("rep").textContent = state.rep;
+      document.getElementById("aliceMeter").style.width = state.index >= 1 ? "35%" : "0%";
+      document.getElementById("bobMeter").style.width = Math.min(100, state.rep).toString() + "%";
+      renderSteps();
+    }
+
+    function advance() {
+      if (state.index >= events.length) return;
+      const item = events[state.index];
+      addEvent(item);
+      state.index += 1;
+      if (item[0] === "create_guild") state.guilds = 1;
+      if (item[0] === "attest_contribution") {
+        state.proofs = 1;
+        state.rep = 120;
+      }
+      syncStats();
+    }
+
+    async function runAll() {
+      while (state.index < events.length) {
+        advance();
+        await new Promise(resolve => setTimeout(resolve, 520));
+      }
+    }
+
+    document.getElementById("runFlow").addEventListener("click", runAll);
+    document.getElementById("submitProof").addEventListener("click", () => {
+      while (state.index < 5) advance();
+    });
+    document.getElementById("reset").addEventListener("click", () => {
+      state.index = 0;
+      state.guilds = 0;
+      state.proofs = 0;
+      state.rep = 0;
+      feed.innerHTML = "";
+      syncStats();
+    });
+
+    syncStats();
+  </script>
+</body>
+</html>

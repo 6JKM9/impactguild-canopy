@@ -13,7 +13,7 @@
         "build:proto": "node ./node_modules/protobufjs-cli/bin/pbjs -t static-module -w commonjs -o src/proto/index.js proto/*.proto && node ./node_modules/protobufjs-cli/bin/pbts -o src/proto/index.d.ts src/proto/index.js && node -e \"require('fs').copyFileSync('src/proto/index.js','src/proto/index.cjs')\"",
         "build:descriptors": "node scripts/generate-descriptors.cjs",
         "build:all": "npm run build:proto && npm run build:descriptors && npm run build",
-        "demo:vibegraph": "node ./node_modules/tsx/dist/cli.mjs demo/vibegraph_demo.ts"
+        "demo:impactguild": "node ./node_modules/tsx/dist/cli.mjs demo/impactguild_demo.ts"
     },
     "dependencies": {
         "long": "^5.2.3",

@@ -91,3 +91,31 @@ export function ErrSelfVibe(): IPluginError {
 export function ErrInvalidSocialText(): IPluginError {
     return NewError(19, DefaultModule, 'social text field is invalid');
 }
+
+export function ErrGuildRequired(): IPluginError {
+    return NewError(20, DefaultModule, 'guild does not exist');
+}
+
+export function ErrQuestRequired(): IPluginError {
+    return NewError(21, DefaultModule, 'quest does not exist');
+}
+
+export function ErrProofRequired(): IPluginError {
+    return NewError(22, DefaultModule, 'contribution proof does not exist');
+}
+
+export function ErrGateRequired(): IPluginError {
+    return NewError(23, DefaultModule, 'access gate does not exist');
+}
+
+export function ErrAlreadyReviewed(): IPluginError {
+    return NewError(24, DefaultModule, 'contribution proof was already reviewed');
+}
+
+export function ErrInvalidSlug(): IPluginError {
+    return NewError(25, DefaultModule, 'guild slug is invalid');
+}
+
+export function ErrSlugTaken(): IPluginError {
+    return NewError(26, DefaultModule, 'guild slug is already taken');
+}

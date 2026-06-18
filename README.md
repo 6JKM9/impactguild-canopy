@@ -1,51 +1,55 @@
-# VibeGraph - On-Chain Social Reputation Graph
+# ImpactGuild - Onchain Social-Fi Operating System
 
-**One-line pitch:** VibeGraph turns community thanks into portable onchain reputation.
+**One-line pitch:** ImpactGuild turns community work into portable onchain reputation, gated access, badges, and contribution-weighted governance.
 
-VibeGraph is a Social-Fi appchain built with the Canopy TypeScript plugin template. Users register onchain social profiles, then give each other signed reputation attestations called "vibes" for useful community work. Each vibe is stored as onchain state and updates the receiver's portable reputation score.
+ImpactGuild is a Social-Fi appchain built with the Canopy TypeScript plugin template. Communities create guilds, post quests, review contribution proof, issue contributor badges, unlock gated spaces, and let members vote with earned reputation instead of token wealth.
 
-## Features
+## Why It Matters
 
-### Onchain Social Profiles
+Discord communities, DAOs, and builder ecosystems all have the same problem: the people who help the most often have no portable proof of their work. ImpactGuild makes that work visible onchain.
 
-- Register a profile with a unique handle and bio.
-- Store profile data directly in Canopy plugin state.
-- Track reputation score, vibes given, and vibes received.
+## Core Flow
 
-### Give Vibe Transaction
+1. A user registers an onchain profile.
+2. A community creates a guild.
+3. The guild posts quests for useful work.
+4. Contributors submit proof links.
+5. Reviewers attest the contribution.
+6. Contributors earn reputation and badges.
+7. Reputation and badges unlock gates.
+8. Governance votes are weighted by earned reputation.
 
-- Send signed reputation points to another registered profile.
-- Add a tag like `mentor`, `builder`, `artist`, or `moderator`.
-- Attach a short note explaining why the reputation was given.
-
-### Reputation Attestations
-
-- Every vibe is stored as an onchain attestation.
-- Tracks sender, receiver, amount, tag, note, and height.
-- Builds a portable social graph of community trust.
-
-### Custom Canopy Plugin
-
-VibeGraph is implemented inside the official Canopy TypeScript plugin template.
-
-Custom transaction types:
+## Custom Canopy Transactions
 
 - `register_profile`
 - `give_vibe`
+- `create_guild`
+- `post_quest`
+- `submit_proof`
+- `attest_contribution`
+- `issue_badge`
+- `create_gate`
+- `check_gate_access`
+- `cast_reputation_vote`
 
-Custom state types:
+## Custom State
 
 - `SocialProfile`
 - `VibeAttestation`
-- `VibeCounter`
+- `Guild`
+- `Quest`
+- `ContributionProof`
+- `GuildBadge`
+- `AccessGate`
+- `GateAccess`
+- `ReputationVote`
 
 ## Project Files
 
-- Plugin code: `plugin/typescript/src/contract/contract.ts`
+- Plugin contract: `plugin/typescript/src/contract/contract.ts`
 - Custom protobufs: `plugin/typescript/proto/tx.proto`
-- RPC demo script: `plugin/typescript/demo/vibegraph_demo.ts`
-- Visual dashboard: `plugin/typescript/demo/vibegraph_dashboard.html`
-- Video demo page: `plugin/typescript/demo/vibegraph_video_demo.html`
+- RPC demo script: `plugin/typescript/demo/impactguild_demo.ts`
+- Visual dashboard: `plugin/typescript/demo/impactguild_dashboard.html`
 - Submission notes: `plugin/typescript/SUBMISSION.md`
 
 ## Run The Plugin
@@ -62,7 +66,7 @@ The RPC demo requires a local Canopy chain running with the TypeScript plugin en
 
 ```bash
 cd plugin/typescript
-npm run demo:vibegraph
+npm run demo:impactguild
 ```
 
 The demo uses:
@@ -72,32 +76,7 @@ The demo uses:
 
 ## Demo Story
 
-1. Alice registers an onchain profile.
-2. Bob registers an onchain profile.
-3. Alice gives Bob `42` vibe points tagged `mentor`.
-4. Bob's reputation score increases.
-5. The transaction is confirmed through local Canopy RPC.
-
-## Contest Submission Text
-
-```text
-VibeGraph - On-Chain Social Reputation Graph
-
-Pitch: VibeGraph turns community thanks into portable onchain reputation.
-
-VibeGraph is a Social-Fi appchain built with the Canopy TypeScript template. Users register onchain profiles, then give each other signed "vibes" for useful community work. Each vibe is stored as an onchain reputation attestation and updates the receiver's portable reputation score.
-
-Custom txs:
-- register_profile
-- give_vibe
-
-Features:
-- Onchain social profiles
-- Signed reputation attestations
-- Vibe score tracking
-- Contributor trust graph
-- Local Canopy RPC demo through ports 50002 / 50003
-```
+Alice creates the Canopy Builders guild. Bob submits proof for a Social-Fi quest. Alice approves the contribution, Bob earns 120 reputation, receives a Verified Builder badge, unlocks the VIP Builders gate, and casts a reputation-weighted governance vote.
 
 ## Built With
 

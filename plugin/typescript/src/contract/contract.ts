@@ -1,4 +1,4 @@
-/* This file contains the VibeGraph Social-Fi contract implementation. */
+/* This file contains the ImpactGuild Social-Fi contract implementation. */
 
 import Long from 'long';
 
@@ -7,14 +7,21 @@ import { types } from '../proto/types.js';
 import {
     IPluginError,
     ErrHandleTaken,
+    ErrAlreadyReviewed,
+    ErrGateRequired,
+    ErrGuildRequired,
     ErrInsufficientFunds,
     ErrInvalidAddress,
     ErrInvalidAmount,
     ErrInvalidHandle,
     ErrInvalidMessageCast,
+    ErrInvalidSlug,
     ErrInvalidSocialText,
+    ErrProofRequired,
+    ErrQuestRequired,
     ErrProfileRequired,
     ErrSelfVibe,
+    ErrSlugTaken,
     ErrTxFeeBelowStateLimit
 } from './error.js';
 
@@ -23,14 +30,34 @@ import { JoinLenPrefix, FromAny, Unmarshal } from './plugin.js';
 import { fileDescriptorProtos } from '../proto/descriptors.js';
 
 export const ContractConfig: any = {
-    name: 'vibegraph_social_fi',
+    name: 'impactguild_social_fi',
     id: 1,
     version: 1,
-    supportedTransactions: ['send', 'register_profile', 'give_vibe'],
+    supportedTransactions: [
+        'send',
+        'register_profile',
+        'give_vibe',
+        'create_guild',
+        'post_quest',
+        'submit_proof',
+        'attest_contribution',
+        'issue_badge',
+        'create_gate',
+        'check_gate_access',
+        'cast_reputation_vote'
+    ],
     transactionTypeUrls: [
         'type.googleapis.com/types.MessageSend',
         'type.googleapis.com/types.MessageRegisterProfile',
-        'type.googleapis.com/types.MessageGiveVibe'
+        'type.googleapis.com/types.MessageGiveVibe',
+        'type.googleapis.com/types.MessageCreateGuild',
+        'type.googleapis.com/types.MessagePostQuest',
+        'type.googleapis.com/types.MessageSubmitProof',
+        'type.googleapis.com/types.MessageAttestContribution',
+        'type.googleapis.com/types.MessageIssueBadge',
+        'type.googleapis.com/types.MessageCreateGate',
+        'type.googleapis.com/types.MessageCheckGateAccess',
+        'type.googleapis.com/types.MessageCastReputationVote'
     ],
     eventTypeUrls: [],
     fileDescriptorProtos
@@ -117,6 +144,145 @@ export class Contract {
             authorizedSigners: [msg.fromAddress]
         };
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageCreateGuild(msg: any): any {
+        if (!isAddress(msg.creatorAddress)) {
+            return { error: ErrInvalidAddress() };
+        }
+        if (!isValidSlug(msg.slug)) {
+            return { error: ErrInvalidSlug() };
+        }
+        if (!isValidTitle(msg.name, 3, 48) || !isValidNote(msg.description)) {
+            return { error: ErrInvalidSocialText() };
+        }
+        return {
+            recipient: msg.creatorAddress,
+            authorizedSigners: [msg.creatorAddress]
+        };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessagePostQuest(msg: any): any {
+        if (!isAddress(msg.creatorAddress)) {
+            return { error: ErrInvalidAddress() };
+        }
+        if (toLong(msg.guildId).isZero()) {
+            return { error: ErrInvalidAmount() };
+        }
+        if (!isValidTitle(msg.title, 3, 80) || !isValidTag(msg.tag)) {
+            return { error: ErrInvalidSocialText() };
+        }
+        if (toLong(msg.rewardRep).isZero() || toLong(msg.rewardRep).greaterThan(Long.fromNumber(500))) {
+            return { error: ErrInvalidAmount() };
+        }
+        return {
+            recipient: msg.creatorAddress,
+            authorizedSigners: [msg.creatorAddress]
+        };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageSubmitProof(msg: any): any {
+        if (!isAddress(msg.contributorAddress)) {
+            return { error: ErrInvalidAddress() };
+        }
+        if (toLong(msg.guildId).isZero() || toLong(msg.questId).isZero()) {
+            return { error: ErrInvalidAmount() };
+        }
+        if (!isValidUri(msg.proofURI || msg.proofUri) || !isValidNote(msg.note)) {
+            return { error: ErrInvalidSocialText() };
+        }
+        return {
+            recipient: msg.contributorAddress,
+            authorizedSigners: [msg.contributorAddress]
+        };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageAttestContribution(msg: any): any {
+        if (!isAddress(msg.reviewerAddress)) {
+            return { error: ErrInvalidAddress() };
+        }
+        if (toLong(msg.proofId).isZero()) {
+            return { error: ErrInvalidAmount() };
+        }
+        if (toLong(msg.amount).isZero() || toLong(msg.amount).greaterThan(Long.fromNumber(500))) {
+            return { error: ErrInvalidAmount() };
+        }
+        if (!isValidNote(msg.note)) {
+            return { error: ErrInvalidSocialText() };
+        }
+        return {
+            recipient: msg.reviewerAddress,
+            authorizedSigners: [msg.reviewerAddress]
+        };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageIssueBadge(msg: any): any {
+        if (!isAddress(msg.issuerAddress) || !isAddress(msg.toAddress)) {
+            return { error: ErrInvalidAddress() };
+        }
+        if (toLong(msg.guildId).isZero()) {
+            return { error: ErrInvalidAmount() };
+        }
+        if (!isValidTitle(msg.badgeName, 3, 48) || !isValidUri(msg.badgeURI || msg.badgeUri)) {
+            return { error: ErrInvalidSocialText() };
+        }
+        return {
+            recipient: msg.toAddress,
+            authorizedSigners: [msg.issuerAddress]
+        };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageCreateGate(msg: any): any {
+        if (!isAddress(msg.creatorAddress)) {
+            return { error: ErrInvalidAddress() };
+        }
+        if (toLong(msg.guildId).isZero()) {
+            return { error: ErrInvalidAmount() };
+        }
+        if (!isValidTitle(msg.gateName, 3, 48) || !isOptionalTag(msg.requiredBadge)) {
+            return { error: ErrInvalidSocialText() };
+        }
+        return {
+            recipient: msg.creatorAddress,
+            authorizedSigners: [msg.creatorAddress]
+        };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageCheckGateAccess(msg: any): any {
+        if (!isAddress(msg.visitorAddress)) {
+            return { error: ErrInvalidAddress() };
+        }
+        if (toLong(msg.gateId).isZero()) {
+            return { error: ErrInvalidAmount() };
+        }
+        return {
+            recipient: msg.visitorAddress,
+            authorizedSigners: [msg.visitorAddress]
+        };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CheckMessageCastReputationVote(msg: any): any {
+        if (!isAddress(msg.voterAddress)) {
+            return { error: ErrInvalidAddress() };
+        }
+        if (toLong(msg.guildId).isZero()) {
+            return { error: ErrInvalidAmount() };
+        }
+        if (!isValidTitle(msg.proposalId, 3, 64) || !isValidTitle(msg.choice, 2, 32)) {
+            return { error: ErrInvalidSocialText() };
+        }
+        return {
+            recipient: msg.voterAddress,
+            authorizedSigners: [msg.voterAddress]
+        };
+    }
 }
 
 export class ContractAsync {
@@ -142,6 +308,22 @@ export class ContractAsync {
                 return contract.CheckMessageRegisterProfile(msg);
             case 'MessageGiveVibe':
                 return contract.CheckMessageGiveVibe(msg);
+            case 'MessageCreateGuild':
+                return contract.CheckMessageCreateGuild(msg);
+            case 'MessagePostQuest':
+                return contract.CheckMessagePostQuest(msg);
+            case 'MessageSubmitProof':
+                return contract.CheckMessageSubmitProof(msg);
+            case 'MessageAttestContribution':
+                return contract.CheckMessageAttestContribution(msg);
+            case 'MessageIssueBadge':
+                return contract.CheckMessageIssueBadge(msg);
+            case 'MessageCreateGate':
+                return contract.CheckMessageCreateGate(msg);
+            case 'MessageCheckGateAccess':
+                return contract.CheckMessageCheckGateAccess(msg);
+            case 'MessageCastReputationVote':
+                return contract.CheckMessageCastReputationVote(msg);
             default:
                 return { error: ErrInvalidMessageCast() };
         }
@@ -166,6 +348,22 @@ export class ContractAsync {
                 return ContractAsync.DeliverMessageRegisterProfile(contract, msg, fee, createdHeight);
             case 'MessageGiveVibe':
                 return ContractAsync.DeliverMessageGiveVibe(contract, msg, fee, createdHeight);
+            case 'MessageCreateGuild':
+                return ContractAsync.DeliverMessageCreateGuild(contract, msg, fee, createdHeight);
+            case 'MessagePostQuest':
+                return ContractAsync.DeliverMessagePostQuest(contract, msg, fee, createdHeight);
+            case 'MessageSubmitProof':
+                return ContractAsync.DeliverMessageSubmitProof(contract, msg, fee, createdHeight);
+            case 'MessageAttestContribution':
+                return ContractAsync.DeliverMessageAttestContribution(contract, msg, fee, createdHeight);
+            case 'MessageIssueBadge':
+                return ContractAsync.DeliverMessageIssueBadge(contract, msg, fee, createdHeight);
+            case 'MessageCreateGate':
+                return ContractAsync.DeliverMessageCreateGate(contract, msg, fee, createdHeight);
+            case 'MessageCheckGateAccess':
+                return ContractAsync.DeliverMessageCheckGateAccess(contract, msg, fee, createdHeight);
+            case 'MessageCastReputationVote':
+                return ContractAsync.DeliverMessageCastReputationVote(contract, msg, fee, createdHeight);
             default:
                 return { error: ErrInvalidMessageCast() };
         }
@@ -585,6 +783,668 @@ export class ContractAsync {
         }
         return {};
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageCreateGuild(
+        contract: Contract,
+        msg: any,
+        fee: Long | number | undefined,
+        height: Long
+    ): Promise<any> {
+        const profileQueryId = randomQueryId();
+        const slugQueryId = randomQueryId();
+        const counterQueryId = randomQueryId();
+        const slug = normalizeSlug(msg.slug);
+
+        const [response, readErr] = await contract.plugin.StateRead(contract, {
+            keys: [
+                { queryId: profileQueryId, key: KeyForProfile(msg.creatorAddress) },
+                { queryId: slugQueryId, key: KeyForGuildSlug(slug) },
+                { queryId: counterQueryId, key: KeyForGuildCounter() }
+            ]
+        });
+        if (readErr) {
+            return { error: readErr };
+        }
+        if (response?.error) {
+            return { error: response.error };
+        }
+        if (!readFirst(response, profileQueryId)) {
+            return { error: ErrProfileRequired() };
+        }
+        if (readFirst(response, slugQueryId)) {
+            return { error: ErrSlugTaken() };
+        }
+
+        const [counterRaw, counterErr] = Unmarshal(
+            readFirst(response, counterQueryId) || new Uint8Array(),
+            types.GuildCounter
+        );
+        if (counterErr) {
+            return { error: counterErr };
+        }
+        const counter = counterRaw as any;
+        const guildId = nextCounterId(counter?.nextId);
+        const guildKey = KeyForGuild(guildId);
+        const guild = types.Guild.create({
+            id: guildId,
+            creatorAddress: msg.creatorAddress,
+            slug,
+            name: msg.name,
+            description: msg.description || '',
+            memberCount: Long.ONE,
+            totalReputation: Long.ZERO,
+            createdHeight: height
+        });
+
+        return ContractAsync.WriteWithFee(contract, msg.creatorAddress, fee, [
+            { key: guildKey, value: types.Guild.encode(guild).finish() },
+            { key: KeyForGuildSlug(slug), value: guildKey },
+            {
+                key: KeyForGuildCounter(),
+                value: types.GuildCounter.encode(types.GuildCounter.create({ nextId: guildId.add(Long.ONE) })).finish()
+            }
+        ]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessagePostQuest(
+        contract: Contract,
+        msg: any,
+        fee: Long | number | undefined,
+        height: Long
+    ): Promise<any> {
+        const guildQueryId = randomQueryId();
+        const profileQueryId = randomQueryId();
+        const counterQueryId = randomQueryId();
+        const guildId = toLong(msg.guildId);
+
+        const [response, readErr] = await contract.plugin.StateRead(contract, {
+            keys: [
+                { queryId: guildQueryId, key: KeyForGuild(guildId) },
+                { queryId: profileQueryId, key: KeyForProfile(msg.creatorAddress) },
+                { queryId: counterQueryId, key: KeyForQuestCounter() }
+            ]
+        });
+        if (readErr) {
+            return { error: readErr };
+        }
+        if (response?.error) {
+            return { error: response.error };
+        }
+        if (!readFirst(response, guildQueryId)) {
+            return { error: ErrGuildRequired() };
+        }
+        if (!readFirst(response, profileQueryId)) {
+            return { error: ErrProfileRequired() };
+        }
+
+        const [counterRaw, counterErr] = Unmarshal(
+            readFirst(response, counterQueryId) || new Uint8Array(),
+            types.QuestCounter
+        );
+        if (counterErr) {
+            return { error: counterErr };
+        }
+        const questId = nextCounterId((counterRaw as any)?.nextId);
+        const quest = types.Quest.create({
+            id: questId,
+            guildId,
+            creatorAddress: msg.creatorAddress,
+            title: msg.title,
+            tag: normalizeTag(msg.tag),
+            rewardRep: toLong(msg.rewardRep),
+            open: true,
+            createdHeight: height
+        });
+
+        return ContractAsync.WriteWithFee(contract, msg.creatorAddress, fee, [
+            { key: KeyForQuest(questId), value: types.Quest.encode(quest).finish() },
+            {
+                key: KeyForQuestCounter(),
+                value: types.QuestCounter.encode(types.QuestCounter.create({ nextId: questId.add(Long.ONE) })).finish()
+            }
+        ]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageSubmitProof(
+        contract: Contract,
+        msg: any,
+        fee: Long | number | undefined,
+        height: Long
+    ): Promise<any> {
+        const profileQueryId = randomQueryId();
+        const guildQueryId = randomQueryId();
+        const questQueryId = randomQueryId();
+        const counterQueryId = randomQueryId();
+        const guildId = toLong(msg.guildId);
+        const questId = toLong(msg.questId);
+
+        const [response, readErr] = await contract.plugin.StateRead(contract, {
+            keys: [
+                { queryId: profileQueryId, key: KeyForProfile(msg.contributorAddress) },
+                { queryId: guildQueryId, key: KeyForGuild(guildId) },
+                { queryId: questQueryId, key: KeyForQuest(questId) },
+                { queryId: counterQueryId, key: KeyForProofCounter() }
+            ]
+        });
+        if (readErr) {
+            return { error: readErr };
+        }
+        if (response?.error) {
+            return { error: response.error };
+        }
+        if (!readFirst(response, profileQueryId)) {
+            return { error: ErrProfileRequired() };
+        }
+        if (!readFirst(response, guildQueryId)) {
+            return { error: ErrGuildRequired() };
+        }
+        if (!readFirst(response, questQueryId)) {
+            return { error: ErrQuestRequired() };
+        }
+
+        const [counterRaw, counterErr] = Unmarshal(
+            readFirst(response, counterQueryId) || new Uint8Array(),
+            types.ProofCounter
+        );
+        if (counterErr) {
+            return { error: counterErr };
+        }
+        const proofId = nextCounterId((counterRaw as any)?.nextId);
+        const proof = types.ContributionProof.create({
+            id: proofId,
+            guildId,
+            questId,
+            contributorAddress: msg.contributorAddress,
+            proofURI: msg.proofURI || msg.proofUri || '',
+            note: msg.note || '',
+            status: 'submitted',
+            createdHeight: height,
+            reviewedHeight: Long.ZERO
+        });
+
+        return ContractAsync.WriteWithFee(contract, msg.contributorAddress, fee, [
+            { key: KeyForProof(proofId), value: types.ContributionProof.encode(proof).finish() },
+            {
+                key: KeyForProofCounter(),
+                value: types.ProofCounter.encode(types.ProofCounter.create({ nextId: proofId.add(Long.ONE) })).finish()
+            }
+        ]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageAttestContribution(
+        contract: Contract,
+        msg: any,
+        fee: Long | number | undefined,
+        height: Long
+    ): Promise<any> {
+        const reviewerProfileQueryId = randomQueryId();
+        const proofQueryId = randomQueryId();
+        const contributorProfileQueryId = randomQueryId();
+        const guildQueryId = randomQueryId();
+        const vibeCounterQueryId = randomQueryId();
+        const proofId = toLong(msg.proofId);
+
+        const [proofResponse, proofReadErr] = await contract.plugin.StateRead(contract, {
+            keys: [{ queryId: proofQueryId, key: KeyForProof(proofId) }]
+        });
+        if (proofReadErr) {
+            return { error: proofReadErr };
+        }
+        if (proofResponse?.error) {
+            return { error: proofResponse.error };
+        }
+        const proofBytes = readFirst(proofResponse, proofQueryId);
+        if (!proofBytes) {
+            return { error: ErrProofRequired() };
+        }
+        const [proofRaw, proofErr] = Unmarshal(proofBytes, types.ContributionProof);
+        if (proofErr) {
+            return { error: proofErr };
+        }
+        const proof = proofRaw as any;
+        if (proof.status && proof.status !== 'submitted') {
+            return { error: ErrAlreadyReviewed() };
+        }
+
+        const [response, readErr] = await contract.plugin.StateRead(contract, {
+            keys: [
+                { queryId: reviewerProfileQueryId, key: KeyForProfile(msg.reviewerAddress) },
+                { queryId: contributorProfileQueryId, key: KeyForProfile(proof.contributorAddress) },
+                { queryId: guildQueryId, key: KeyForGuild(toLong(proof.guildId)) },
+                { queryId: vibeCounterQueryId, key: KeyForVibeCounter() }
+            ]
+        });
+        if (readErr) {
+            return { error: readErr };
+        }
+        if (response?.error) {
+            return { error: response.error };
+        }
+        const reviewerBytes = readFirst(response, reviewerProfileQueryId);
+        const contributorBytes = readFirst(response, contributorProfileQueryId);
+        const guildBytes = readFirst(response, guildQueryId);
+        if (!reviewerBytes || !contributorBytes) {
+            return { error: ErrProfileRequired() };
+        }
+        if (!guildBytes) {
+            return { error: ErrGuildRequired() };
+        }
+
+        const [reviewerProfileRaw, reviewerErr] = Unmarshal(reviewerBytes, types.SocialProfile);
+        const [contributorProfileRaw, contributorErr] = Unmarshal(contributorBytes, types.SocialProfile);
+        const [guildRaw, guildErr] = Unmarshal(guildBytes, types.Guild);
+        const [counterRaw, counterErr] = Unmarshal(
+            readFirst(response, vibeCounterQueryId) || new Uint8Array(),
+            types.VibeCounter
+        );
+        if (reviewerErr || contributorErr || guildErr || counterErr) {
+            return { error: reviewerErr || contributorErr || guildErr || counterErr };
+        }
+
+        const amount = toLong(msg.amount);
+        const reviewer = reviewerProfileRaw as any;
+        const contributor = contributorProfileRaw as any;
+        const guild = guildRaw as any;
+        const attestationId = nextCounterId((counterRaw as any)?.nextId);
+        const updatedProof = types.ContributionProof.create({
+            ...proof,
+            status: 'approved',
+            reviewedHeight: height
+        });
+        const updatedReviewer = types.SocialProfile.create({
+            ...reviewer,
+            vibesGiven: toLong(reviewer.vibesGiven).add(amount),
+            updatedHeight: height
+        });
+        const updatedContributor = types.SocialProfile.create({
+            ...contributor,
+            vibeScore: toLong(contributor.vibeScore).add(amount),
+            vibesReceived: toLong(contributor.vibesReceived).add(amount),
+            updatedHeight: height
+        });
+        const updatedGuild = types.Guild.create({
+            ...guild,
+            totalReputation: toLong(guild.totalReputation).add(amount)
+        });
+        const attestation = types.VibeAttestation.create({
+            id: attestationId,
+            fromAddress: msg.reviewerAddress,
+            toAddress: proof.contributorAddress,
+            amount,
+            tag: 'proof',
+            note: msg.note || '',
+            height
+        });
+
+        return ContractAsync.WriteWithFee(contract, msg.reviewerAddress, fee, [
+            { key: KeyForProof(proofId), value: types.ContributionProof.encode(updatedProof).finish() },
+            { key: KeyForProfile(msg.reviewerAddress), value: types.SocialProfile.encode(updatedReviewer).finish() },
+            { key: KeyForProfile(proof.contributorAddress), value: types.SocialProfile.encode(updatedContributor).finish() },
+            { key: KeyForGuild(toLong(proof.guildId)), value: types.Guild.encode(updatedGuild).finish() },
+            { key: KeyForVibe(attestationId), value: types.VibeAttestation.encode(attestation).finish() },
+            {
+                key: KeyForVibeCounter(),
+                value: types.VibeCounter.encode(types.VibeCounter.create({ nextId: attestationId.add(Long.ONE) })).finish()
+            }
+        ]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageIssueBadge(
+        contract: Contract,
+        msg: any,
+        fee: Long | number | undefined,
+        height: Long
+    ): Promise<any> {
+        const issuerProfileQueryId = randomQueryId();
+        const toProfileQueryId = randomQueryId();
+        const guildQueryId = randomQueryId();
+        const counterQueryId = randomQueryId();
+        const guildId = toLong(msg.guildId);
+
+        const [response, readErr] = await contract.plugin.StateRead(contract, {
+            keys: [
+                { queryId: issuerProfileQueryId, key: KeyForProfile(msg.issuerAddress) },
+                { queryId: toProfileQueryId, key: KeyForProfile(msg.toAddress) },
+                { queryId: guildQueryId, key: KeyForGuild(guildId) },
+                { queryId: counterQueryId, key: KeyForBadgeCounter() }
+            ]
+        });
+        if (readErr) {
+            return { error: readErr };
+        }
+        if (response?.error) {
+            return { error: response.error };
+        }
+        if (!readFirst(response, issuerProfileQueryId) || !readFirst(response, toProfileQueryId)) {
+            return { error: ErrProfileRequired() };
+        }
+        if (!readFirst(response, guildQueryId)) {
+            return { error: ErrGuildRequired() };
+        }
+
+        const [counterRaw, counterErr] = Unmarshal(
+            readFirst(response, counterQueryId) || new Uint8Array(),
+            types.BadgeCounter
+        );
+        if (counterErr) {
+            return { error: counterErr };
+        }
+        const badgeId = nextCounterId((counterRaw as any)?.nextId);
+        const badgeName = normalizeBadge(msg.badgeName);
+        const badgeKey = KeyForBadge(badgeId);
+        const badge = types.GuildBadge.create({
+            id: badgeId,
+            guildId,
+            issuerAddress: msg.issuerAddress,
+            toAddress: msg.toAddress,
+            badgeName,
+            badgeURI: msg.badgeURI || msg.badgeUri || '',
+            issuedHeight: height
+        });
+
+        return ContractAsync.WriteWithFee(contract, msg.issuerAddress, fee, [
+            { key: badgeKey, value: types.GuildBadge.encode(badge).finish() },
+            { key: KeyForBadgeByOwnerName(msg.toAddress, guildId, badgeName), value: badgeKey },
+            {
+                key: KeyForBadgeCounter(),
+                value: types.BadgeCounter.encode(types.BadgeCounter.create({ nextId: badgeId.add(Long.ONE) })).finish()
+            }
+        ]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageCreateGate(
+        contract: Contract,
+        msg: any,
+        fee: Long | number | undefined,
+        height: Long
+    ): Promise<any> {
+        const creatorProfileQueryId = randomQueryId();
+        const guildQueryId = randomQueryId();
+        const counterQueryId = randomQueryId();
+        const guildId = toLong(msg.guildId);
+
+        const [response, readErr] = await contract.plugin.StateRead(contract, {
+            keys: [
+                { queryId: creatorProfileQueryId, key: KeyForProfile(msg.creatorAddress) },
+                { queryId: guildQueryId, key: KeyForGuild(guildId) },
+                { queryId: counterQueryId, key: KeyForGateCounter() }
+            ]
+        });
+        if (readErr) {
+            return { error: readErr };
+        }
+        if (response?.error) {
+            return { error: response.error };
+        }
+        if (!readFirst(response, creatorProfileQueryId)) {
+            return { error: ErrProfileRequired() };
+        }
+        if (!readFirst(response, guildQueryId)) {
+            return { error: ErrGuildRequired() };
+        }
+
+        const [counterRaw, counterErr] = Unmarshal(
+            readFirst(response, counterQueryId) || new Uint8Array(),
+            types.GateCounter
+        );
+        if (counterErr) {
+            return { error: counterErr };
+        }
+        const gateId = nextCounterId((counterRaw as any)?.nextId);
+        const gate = types.AccessGate.create({
+            id: gateId,
+            guildId,
+            gateName: msg.gateName,
+            requiredRep: toLong(msg.requiredRep),
+            requiredBadge: normalizeBadge(msg.requiredBadge),
+            createdHeight: height
+        });
+
+        return ContractAsync.WriteWithFee(contract, msg.creatorAddress, fee, [
+            { key: KeyForGate(gateId), value: types.AccessGate.encode(gate).finish() },
+            {
+                key: KeyForGateCounter(),
+                value: types.GateCounter.encode(types.GateCounter.create({ nextId: gateId.add(Long.ONE) })).finish()
+            }
+        ]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageCheckGateAccess(
+        contract: Contract,
+        msg: any,
+        fee: Long | number | undefined,
+        height: Long
+    ): Promise<any> {
+        const gateQueryId = randomQueryId();
+        const profileQueryId = randomQueryId();
+        const badgeQueryId = randomQueryId();
+        const counterQueryId = randomQueryId();
+        const gateId = toLong(msg.gateId);
+
+        const [gateResponse, gateReadErr] = await contract.plugin.StateRead(contract, {
+            keys: [{ queryId: gateQueryId, key: KeyForGate(gateId) }]
+        });
+        if (gateReadErr) {
+            return { error: gateReadErr };
+        }
+        if (gateResponse?.error) {
+            return { error: gateResponse.error };
+        }
+        const gateBytes = readFirst(gateResponse, gateQueryId);
+        if (!gateBytes) {
+            return { error: ErrGateRequired() };
+        }
+        const [gateRaw, gateErr] = Unmarshal(gateBytes, types.AccessGate);
+        if (gateErr) {
+            return { error: gateErr };
+        }
+        const gate = gateRaw as any;
+        const requiredBadge = normalizeBadge(gate.requiredBadge);
+
+        const keys = [
+            { queryId: profileQueryId, key: KeyForProfile(msg.visitorAddress) },
+            { queryId: counterQueryId, key: KeyForGateAccessCounter() }
+        ];
+        if (requiredBadge) {
+            keys.push({
+                queryId: badgeQueryId,
+                key: KeyForBadgeByOwnerName(msg.visitorAddress, toLong(gate.guildId), requiredBadge)
+            });
+        }
+
+        const [response, readErr] = await contract.plugin.StateRead(contract, { keys });
+        if (readErr) {
+            return { error: readErr };
+        }
+        if (response?.error) {
+            return { error: response.error };
+        }
+        const profileBytes = readFirst(response, profileQueryId);
+        if (!profileBytes) {
+            return { error: ErrProfileRequired() };
+        }
+        const [profileRaw, profileErr] = Unmarshal(profileBytes, types.SocialProfile);
+        const [counterRaw, counterErr] = Unmarshal(
+            readFirst(response, counterQueryId) || new Uint8Array(),
+            types.GateAccessCounter
+        );
+        if (profileErr || counterErr) {
+            return { error: profileErr || counterErr };
+        }
+        const profile = profileRaw as any;
+        const hasBadge = !requiredBadge || !!readFirst(response, badgeQueryId);
+        const passed = toLong(profile.vibeScore).greaterThanOrEqual(toLong(gate.requiredRep)) && hasBadge;
+        const accessId = nextCounterId((counterRaw as any)?.nextId);
+        const access = types.GateAccess.create({
+            id: accessId,
+            gateId,
+            visitorAddress: msg.visitorAddress,
+            passed,
+            checkedHeight: height
+        });
+
+        return ContractAsync.WriteWithFee(contract, msg.visitorAddress, fee, [
+            { key: KeyForGateAccess(accessId), value: types.GateAccess.encode(access).finish() },
+            {
+                key: KeyForGateAccessCounter(),
+                value: types.GateAccessCounter.encode(
+                    types.GateAccessCounter.create({ nextId: accessId.add(Long.ONE) })
+                ).finish()
+            }
+        ]);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async DeliverMessageCastReputationVote(
+        contract: Contract,
+        msg: any,
+        fee: Long | number | undefined,
+        height: Long
+    ): Promise<any> {
+        const profileQueryId = randomQueryId();
+        const guildQueryId = randomQueryId();
+        const voteRecordQueryId = randomQueryId();
+        const counterQueryId = randomQueryId();
+        const guildId = toLong(msg.guildId);
+        const proposalId = normalizeProposal(msg.proposalId);
+
+        const [response, readErr] = await contract.plugin.StateRead(contract, {
+            keys: [
+                { queryId: profileQueryId, key: KeyForProfile(msg.voterAddress) },
+                { queryId: guildQueryId, key: KeyForGuild(guildId) },
+                { queryId: voteRecordQueryId, key: KeyForVoteRecord(guildId, proposalId, msg.voterAddress) },
+                { queryId: counterQueryId, key: KeyForVoteCounter() }
+            ]
+        });
+        if (readErr) {
+            return { error: readErr };
+        }
+        if (response?.error) {
+            return { error: response.error };
+        }
+        const profileBytes = readFirst(response, profileQueryId);
+        if (!profileBytes) {
+            return { error: ErrProfileRequired() };
+        }
+        if (!readFirst(response, guildQueryId)) {
+            return { error: ErrGuildRequired() };
+        }
+        if (readFirst(response, voteRecordQueryId)) {
+            return { error: ErrAlreadyReviewed() };
+        }
+        const [profileRaw, profileErr] = Unmarshal(profileBytes, types.SocialProfile);
+        const [counterRaw, counterErr] = Unmarshal(
+            readFirst(response, counterQueryId) || new Uint8Array(),
+            types.VoteCounter
+        );
+        if (profileErr || counterErr) {
+            return { error: profileErr || counterErr };
+        }
+        const voteId = nextCounterId((counterRaw as any)?.nextId);
+        const weight = toLong((profileRaw as any).vibeScore);
+        const voteKey = KeyForVote(voteId);
+        const vote = types.ReputationVote.create({
+            id: voteId,
+            guildId,
+            proposalId,
+            voterAddress: msg.voterAddress,
+            choice: normalizeChoice(msg.choice),
+            weight,
+            height
+        });
+
+        return ContractAsync.WriteWithFee(contract, msg.voterAddress, fee, [
+            { key: voteKey, value: types.ReputationVote.encode(vote).finish() },
+            { key: KeyForVoteRecord(guildId, proposalId, msg.voterAddress), value: voteKey },
+            {
+                key: KeyForVoteCounter(),
+                value: types.VoteCounter.encode(types.VoteCounter.create({ nextId: voteId.add(Long.ONE) })).finish()
+            }
+        ]);
+    }
+
+    static async WriteWithFee(
+        contract: Contract,
+        payerAddress: Uint8Array,
+        fee: Long | number | undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sets: any[],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        deletes: any[] = []
+    ): Promise<any> {
+        const accountQueryId = randomQueryId();
+        const feeQueryId = randomQueryId();
+        const accountKey = KeyForAccount(payerAddress);
+        const feePoolKey = KeyForFeePool(Long.fromNumber(contract.Config.ChainId));
+
+        const [response, readErr] = await contract.plugin.StateRead(contract, {
+            keys: [
+                { queryId: accountQueryId, key: accountKey },
+                { queryId: feeQueryId, key: feePoolKey }
+            ]
+        });
+        if (readErr) {
+            return { error: readErr };
+        }
+        if (response?.error) {
+            return { error: response.error };
+        }
+
+        const [accountRaw, accountErr] = Unmarshal(
+            readFirst(response, accountQueryId) || new Uint8Array(),
+            types.Account
+        );
+        const [feePoolRaw, feePoolErr] = Unmarshal(
+            readFirst(response, feeQueryId) || new Uint8Array(),
+            types.Pool
+        );
+        if (accountErr || feePoolErr) {
+            return { error: accountErr || feePoolErr };
+        }
+
+        const feeAmount = toLong(fee);
+        const account = accountRaw as any;
+        const payerAmount = toLong(account?.amount);
+        if (payerAmount.lessThan(feeAmount)) {
+            return { error: ErrInsufficientFunds() };
+        }
+
+        const updatedPayerAmount = payerAmount.subtract(feeAmount);
+        const updatedPool = types.Pool.create({
+            id: (feePoolRaw as any)?.id || Long.fromNumber(contract.Config.ChainId),
+            amount: toLong((feePoolRaw as any)?.amount).add(feeAmount)
+        });
+        sets.push({ key: feePoolKey, value: types.Pool.encode(updatedPool).finish() });
+        if (updatedPayerAmount.isZero()) {
+            deletes.push({ key: accountKey });
+        } else {
+            sets.push({
+                key: accountKey,
+                value: types.Account.encode(
+                    types.Account.create({
+                        address: account?.address || payerAddress,
+                        amount: updatedPayerAmount
+                    })
+                ).finish()
+            });
+        }
+
+        const [writeResp, writeErr] = await contract.plugin.StateWrite(contract, { sets, deletes });
+        if (writeErr) {
+            return { error: writeErr };
+        }
+        if (writeResp?.error) {
+            return { error: writeResp.error };
+        }
+        return {};
+    }
 }
 
 const accountPrefix = Buffer.from([1]);
@@ -594,6 +1454,23 @@ const profilePrefix = Buffer.from([16]);
 const handlePrefix = Buffer.from([17]);
 const vibePrefix = Buffer.from([18]);
 const socialCounterPrefix = Buffer.from([19]);
+const guildPrefix = Buffer.from([20]);
+const guildSlugPrefix = Buffer.from([21]);
+const guildCounterPrefix = Buffer.from([22]);
+const questPrefix = Buffer.from([23]);
+const questCounterPrefix = Buffer.from([24]);
+const proofPrefix = Buffer.from([25]);
+const proofCounterPrefix = Buffer.from([26]);
+const badgePrefix = Buffer.from([27]);
+const badgeOwnerPrefix = Buffer.from([28]);
+const badgeCounterPrefix = Buffer.from([29]);
+const gatePrefix = Buffer.from([30]);
+const gateCounterPrefix = Buffer.from([31]);
+const gateAccessPrefix = Buffer.from([32]);
+const gateAccessCounterPrefix = Buffer.from([33]);
+const votePrefix = Buffer.from([34]);
+const voteRecordPrefix = Buffer.from([35]);
+const voteCounterPrefix = Buffer.from([36]);
 
 export function KeyForAccount(addr: Uint8Array): Uint8Array {
     return JoinLenPrefix(accountPrefix, Buffer.from(addr));
@@ -621,6 +1498,80 @@ export function KeyForVibe(id: Long): Uint8Array {
 
 export function KeyForVibeCounter(): Uint8Array {
     return JoinLenPrefix(socialCounterPrefix, Buffer.from('/next-vibe/'));
+}
+
+export function KeyForGuild(id: Long): Uint8Array {
+    return JoinLenPrefix(guildPrefix, formatUint64(id));
+}
+
+export function KeyForGuildSlug(slug: string): Uint8Array {
+    return JoinLenPrefix(guildSlugPrefix, Buffer.from(normalizeSlug(slug)));
+}
+
+export function KeyForGuildCounter(): Uint8Array {
+    return JoinLenPrefix(guildCounterPrefix, Buffer.from('/next-guild/'));
+}
+
+export function KeyForQuest(id: Long): Uint8Array {
+    return JoinLenPrefix(questPrefix, formatUint64(id));
+}
+
+export function KeyForQuestCounter(): Uint8Array {
+    return JoinLenPrefix(questCounterPrefix, Buffer.from('/next-quest/'));
+}
+
+export function KeyForProof(id: Long): Uint8Array {
+    return JoinLenPrefix(proofPrefix, formatUint64(id));
+}
+
+export function KeyForProofCounter(): Uint8Array {
+    return JoinLenPrefix(proofCounterPrefix, Buffer.from('/next-proof/'));
+}
+
+export function KeyForBadge(id: Long): Uint8Array {
+    return JoinLenPrefix(badgePrefix, formatUint64(id));
+}
+
+export function KeyForBadgeByOwnerName(addr: Uint8Array, guildId: Long, badgeName: string): Uint8Array {
+    return JoinLenPrefix(
+        badgeOwnerPrefix,
+        Buffer.concat([Buffer.from(addr), formatUint64(guildId), Buffer.from(normalizeBadge(badgeName))])
+    );
+}
+
+export function KeyForBadgeCounter(): Uint8Array {
+    return JoinLenPrefix(badgeCounterPrefix, Buffer.from('/next-badge/'));
+}
+
+export function KeyForGate(id: Long): Uint8Array {
+    return JoinLenPrefix(gatePrefix, formatUint64(id));
+}
+
+export function KeyForGateCounter(): Uint8Array {
+    return JoinLenPrefix(gateCounterPrefix, Buffer.from('/next-gate/'));
+}
+
+export function KeyForGateAccess(id: Long): Uint8Array {
+    return JoinLenPrefix(gateAccessPrefix, formatUint64(id));
+}
+
+export function KeyForGateAccessCounter(): Uint8Array {
+    return JoinLenPrefix(gateAccessCounterPrefix, Buffer.from('/next-gate-access/'));
+}
+
+export function KeyForVote(id: Long): Uint8Array {
+    return JoinLenPrefix(votePrefix, formatUint64(id));
+}
+
+export function KeyForVoteRecord(guildId: Long, proposalId: string, voter: Uint8Array): Uint8Array {
+    return JoinLenPrefix(
+        voteRecordPrefix,
+        Buffer.concat([formatUint64(guildId), Buffer.from(normalizeProposal(proposalId)), Buffer.from(voter)])
+    );
+}
+
+export function KeyForVoteCounter(): Uint8Array {
+    return JoinLenPrefix(voteCounterPrefix, Buffer.from('/next-vote/'));
 }
 
 function formatUint64(u: Long): Buffer {
@@ -666,6 +1617,27 @@ function normalizeTag(tag: string | undefined | null): string {
     return (tag || '').trim().toLowerCase();
 }
 
+function normalizeSlug(slug: string | undefined | null): string {
+    return (slug || '').trim().toLowerCase();
+}
+
+function normalizeBadge(badge: string | undefined | null): string {
+    return (badge || '').trim().toLowerCase();
+}
+
+function normalizeProposal(proposal: string | undefined | null): string {
+    return (proposal || '').trim().toLowerCase();
+}
+
+function normalizeChoice(choice: string | undefined | null): string {
+    return (choice || '').trim().toLowerCase();
+}
+
+function nextCounterId(value: Long | number | string | undefined | null): Long {
+    const next = toLong(value);
+    return next.isZero() ? Long.ONE : next;
+}
+
 function isValidHandle(handle: string | undefined): boolean {
     const normalized = normalizeHandle(handle);
     return /^[a-z0-9_]{3,24}$/.test(normalized);
@@ -678,6 +1650,24 @@ function isValidBio(bio: string | undefined): boolean {
 function isValidTag(tag: string | undefined): boolean {
     const normalized = normalizeTag(tag);
     return /^[a-z0-9_ -]{1,24}$/.test(normalized);
+}
+
+function isOptionalTag(tag: string | undefined): boolean {
+    return !tag || isValidTag(tag);
+}
+
+function isValidSlug(slug: string | undefined): boolean {
+    return /^[a-z0-9-]{3,32}$/.test(normalizeSlug(slug));
+}
+
+function isValidTitle(value: string | undefined, min: number, max: number): boolean {
+    const text = (value || '').trim();
+    return text.length >= min && text.length <= max;
+}
+
+function isValidUri(value: string | undefined): boolean {
+    const text = (value || '').trim();
+    return text.length >= 6 && text.length <= 180;
 }
 
 function isValidNote(note: string | undefined): boolean {
@@ -702,6 +1692,22 @@ function minimumFeeForMessage(msgType: string, feeParams: any): Long {
             return toLong(feeParams?.registerProfileFee);
         case 'MessageGiveVibe':
             return toLong(feeParams?.giveVibeFee);
+        case 'MessageCreateGuild':
+            return toLong(feeParams?.createGuildFee);
+        case 'MessagePostQuest':
+            return toLong(feeParams?.postQuestFee);
+        case 'MessageSubmitProof':
+            return toLong(feeParams?.submitProofFee);
+        case 'MessageAttestContribution':
+            return toLong(feeParams?.attestContributionFee);
+        case 'MessageIssueBadge':
+            return toLong(feeParams?.issueBadgeFee);
+        case 'MessageCreateGate':
+            return toLong(feeParams?.createGateFee);
+        case 'MessageCheckGateAccess':
+            return toLong(feeParams?.checkGateAccessFee);
+        case 'MessageCastReputationVote':
+            return toLong(feeParams?.castReputationVoteFee);
         case 'MessageSend':
         default:
             return toLong(feeParams?.sendFee);

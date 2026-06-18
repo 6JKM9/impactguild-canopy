@@ -1,56 +1,82 @@
-# VibeGraph - On-Chain Social Reputation Graph
+# ImpactGuild Contest Submission
 
-One-line pitch: VibeGraph turns community thanks into portable onchain reputation.
+## One-Line Pitch
 
-VibeGraph is a Social-Fi appchain built with the Canopy TypeScript template. Users register onchain profiles, then give each other signed "vibes" for useful community work. Each vibe is stored as an onchain reputation attestation and updates the receiver's portable reputation score.
+ImpactGuild turns community work into portable onchain reputation, gated access, badges, and contribution-weighted governance.
 
-## Features
+## Description
 
-### Onchain Social Profiles
+ImpactGuild is a Social-Fi appchain built with the Canopy TypeScript template. Communities can create guilds, post contribution quests, accept proof links, approve work through onchain attestations, issue badges, unlock gated rooms, and run governance where voting power comes from earned reputation.
 
-- Create a profile with a unique handle and bio.
-- Store profile data directly in Canopy plugin state.
-- Track reputation score, vibes given, and vibes received.
+The app is designed for Discord communities, DAOs, ambassador programs, open-source ecosystems, and builder groups that need a portable record of who actually contributes.
 
-### Give Vibe Transaction
+## Custom Transaction Types
 
-- Send signed reputation points to another profile.
-- Add a tag like mentor, builder, artist, or moderator.
-- Attach a short note explaining the attestation.
+- `register_profile` - create an onchain social identity
+- `give_vibe` - issue a direct reputation attestation
+- `create_guild` - create a community workspace
+- `post_quest` - publish a contribution quest
+- `submit_proof` - submit proof for a quest
+- `attest_contribution` - approve proof and mint reputation
+- `issue_badge` - mint a portable contributor badge
+- `create_gate` - define reputation/badge access rules
+- `check_gate_access` - record whether a user passes a gate
+- `cast_reputation_vote` - vote with earned reputation weight
 
-### Reputation Attestations
+## Demo Flow
 
-- Every vibe is stored as an onchain attestation.
-- Tracks sender, receiver, amount, tag, note, and height.
-- Builds a portable social graph of community trust.
+1. Alice registers a profile.
+2. Bob registers a profile.
+3. Alice creates the Canopy Builders guild.
+4. Alice posts a Social-Fi builder quest.
+5. Bob submits proof with a GitHub/demo link.
+6. Alice attests Bob's contribution.
+7. Bob earns 120 reputation.
+8. Alice issues Bob a Verified Builder badge.
+9. Alice creates a VIP Builders gate requiring 100 reputation and the badge.
+10. Bob checks the gate and passes.
+11. Bob casts a reputation-weighted governance vote.
 
-### Custom Canopy Plugin
+## Local RPC Proof
 
-- Built with the official Canopy TypeScript template.
-- Defines custom transaction types:
-  - `register_profile`
-  - `give_vibe`
+The demo script interacts with a local Canopy chain through:
 
-### Local RPC Integration
+- `50002` for transaction/query RPC
+- `50003` for admin keystore RPC
 
-- Demo script interacts with a local Canopy chain.
-- Uses RPC port `50002` for transaction submission/query.
-- Uses RPC port `50003` for local keystore account creation.
-
-## Demo Files
-
-- Visual dashboard: `plugin/typescript/demo/vibegraph_dashboard.html`
-- Video-demo page: `plugin/typescript/demo/vibegraph_video_demo.html`
-- RPC demo script: `plugin/typescript/demo/vibegraph_demo.ts`
-- Recording script: `plugin/typescript/demo/VIDEO_SCRIPT.md`
-
-## Run
+Run:
 
 ```bash
 cd plugin/typescript
 npm install
 npm run build:all
-npm run demo:vibegraph
+npm run demo:impactguild
 ```
 
-The RPC demo requires a local Canopy chain running with the TypeScript plugin enabled.
+## Suggested Discord Submission
+
+```text
+ImpactGuild - Onchain Social-Fi Operating System
+
+Pitch: ImpactGuild turns community work into portable onchain reputation, gated access, badges, and contribution-weighted governance.
+
+ImpactGuild is a Social-Fi appchain built with the Canopy TypeScript template. Communities create guilds, post quests, review contribution proof, issue contributor badges, unlock gated spaces, and let members vote with earned reputation instead of token wealth.
+
+Custom txs:
+- register_profile
+- give_vibe
+- create_guild
+- post_quest
+- submit_proof
+- attest_contribution
+- issue_badge
+- create_gate
+- check_gate_access
+- cast_reputation_vote
+
+Demo flow:
+Alice creates a Canopy Builders guild, Bob submits proof for a quest, Alice attests the contribution, Bob earns 120 reputation, receives a Verified Builder badge, unlocks a VIP gate, and casts a reputation-weighted governance vote.
+
+Github: https://github.com/6JKM9/impactguild-canopy
+Demo video: <your X or YouTube video link>
+```

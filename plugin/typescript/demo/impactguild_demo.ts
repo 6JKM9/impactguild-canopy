@@ -12,7 +12,7 @@ const QUERY_RPC_URL = process.env.CANOPY_QUERY_RPC_URL || 'http://localhost:5000
 const ADMIN_RPC_URL = process.env.CANOPY_ADMIN_RPC_URL || 'http://localhost:50003';
 const NETWORK_ID = BigInt(process.env.CANOPY_NETWORK_ID || '1');
 const CHAIN_ID = BigInt(process.env.CANOPY_CHAIN_ID || '1');
-const TEST_PASSWORD = process.env.CANOPY_DEMO_PASSWORD || 'vibegraph-demo-password';
+const TEST_PASSWORD = process.env.CANOPY_DEMO_PASSWORD || 'impactguild-demo-password';
 
 interface KeyGroup {
     address: string;
@@ -96,7 +96,7 @@ async function assertRpcReady(): Promise<void> {
     }
 
     try {
-        const probeName = `vibegraph_probe_${randomSuffix()}`;
+        const probeName = `impactguild_probe_${randomSuffix()}`;
         await keystoreNewKey(probeName);
         console.log(`Connected to Canopy admin RPC at ${ADMIN_RPC_URL}`);
     } catch (err) {
@@ -147,6 +147,22 @@ function getTypeUrl(msgType: string): string {
             return 'type.googleapis.com/types.MessageRegisterProfile';
         case 'give_vibe':
             return 'type.googleapis.com/types.MessageGiveVibe';
+        case 'create_guild':
+            return 'type.googleapis.com/types.MessageCreateGuild';
+        case 'post_quest':
+            return 'type.googleapis.com/types.MessagePostQuest';
+        case 'submit_proof':
+            return 'type.googleapis.com/types.MessageSubmitProof';
+        case 'attest_contribution':
+            return 'type.googleapis.com/types.MessageAttestContribution';
+        case 'issue_badge':
+            return 'type.googleapis.com/types.MessageIssueBadge';
+        case 'create_gate':
+            return 'type.googleapis.com/types.MessageCreateGate';
+        case 'check_gate_access':
+            return 'type.googleapis.com/types.MessageCheckGateAccess';
+        case 'cast_reputation_vote':
+            return 'type.googleapis.com/types.MessageCastReputationVote';
         default:
             throw new Error(`Unknown message type: ${msgType}`);
     }
@@ -170,6 +186,80 @@ function buildMessageBytes(msgType: string, msgJSON: Record<string, unknown>): U
                     amount: msgJSON.amount,
                     tag: msgJSON.tag,
                     note: msgJSON.note
+                })
+            ).finish();
+        case 'create_guild':
+            return types.MessageCreateGuild.encode(
+                types.MessageCreateGuild.create({
+                    creatorAddress: Buffer.from(msgJSON.creatorAddress as string, 'base64'),
+                    slug: msgJSON.slug,
+                    name: msgJSON.name,
+                    description: msgJSON.description
+                })
+            ).finish();
+        case 'post_quest':
+            return types.MessagePostQuest.encode(
+                types.MessagePostQuest.create({
+                    creatorAddress: Buffer.from(msgJSON.creatorAddress as string, 'base64'),
+                    guildId: msgJSON.guildId,
+                    title: msgJSON.title,
+                    tag: msgJSON.tag,
+                    rewardRep: msgJSON.rewardRep
+                })
+            ).finish();
+        case 'submit_proof':
+            return types.MessageSubmitProof.encode(
+                types.MessageSubmitProof.create({
+                    contributorAddress: Buffer.from(msgJSON.contributorAddress as string, 'base64'),
+                    guildId: msgJSON.guildId,
+                    questId: msgJSON.questId,
+                    proofURI: msgJSON.proofURI,
+                    note: msgJSON.note
+                })
+            ).finish();
+        case 'attest_contribution':
+            return types.MessageAttestContribution.encode(
+                types.MessageAttestContribution.create({
+                    reviewerAddress: Buffer.from(msgJSON.reviewerAddress as string, 'base64'),
+                    proofId: msgJSON.proofId,
+                    amount: msgJSON.amount,
+                    note: msgJSON.note
+                })
+            ).finish();
+        case 'issue_badge':
+            return types.MessageIssueBadge.encode(
+                types.MessageIssueBadge.create({
+                    issuerAddress: Buffer.from(msgJSON.issuerAddress as string, 'base64'),
+                    toAddress: Buffer.from(msgJSON.toAddress as string, 'base64'),
+                    guildId: msgJSON.guildId,
+                    badgeName: msgJSON.badgeName,
+                    badgeURI: msgJSON.badgeURI
+                })
+            ).finish();
+        case 'create_gate':
+            return types.MessageCreateGate.encode(
+                types.MessageCreateGate.create({
+                    creatorAddress: Buffer.from(msgJSON.creatorAddress as string, 'base64'),
+                    guildId: msgJSON.guildId,
+                    gateName: msgJSON.gateName,
+                    requiredRep: msgJSON.requiredRep,
+                    requiredBadge: msgJSON.requiredBadge
+                })
+            ).finish();
+        case 'check_gate_access':
+            return types.MessageCheckGateAccess.encode(
+                types.MessageCheckGateAccess.create({
+                    visitorAddress: Buffer.from(msgJSON.visitorAddress as string, 'base64'),
+                    gateId: msgJSON.gateId
+                })
+            ).finish();
+        case 'cast_reputation_vote':
+            return types.MessageCastReputationVote.encode(
+                types.MessageCastReputationVote.create({
+                    voterAddress: Buffer.from(msgJSON.voterAddress as string, 'base64'),
+                    guildId: msgJSON.guildId,
+                    proposalId: msgJSON.proposalId,
+                    choice: msgJSON.choice
                 })
             ).finish();
         default:
@@ -274,17 +364,18 @@ async function maybePrintStateHint(handles: string[]): Promise<void> {
 }
 
 async function main(): Promise<void> {
-    console.log('=== VibeGraph Social-Fi demo ===');
-    console.log('Pitch: VibeGraph turns community thanks into portable onchain reputation.');
+    console.log('=== ImpactGuild Social-Fi demo ===');
+    console.log('Pitch: ImpactGuild turns community work into portable onchain reputation, access, and governance.');
     console.log(`RPC: ${QUERY_RPC_URL} / ${ADMIN_RPC_URL}`);
     await assertRpcReady();
 
     const suffix = randomSuffix();
     const aliceHandle = `alice_${suffix}`;
     const bobHandle = `bob_${suffix}`;
+    const guildSlug = `canopy-builders-${suffix}`;
 
-    const aliceAddr = await keystoreNewKey(`vibegraph_alice_${suffix}`);
-    const bobAddr = await keystoreNewKey(`vibegraph_bob_${suffix}`);
+    const aliceAddr = await keystoreNewKey(`impactguild_alice_${suffix}`);
+    const bobAddr = await keystoreNewKey(`impactguild_bob_${suffix}`);
     const aliceKey = await keystoreGetKey(aliceAddr);
     const bobKey = await keystoreGetKey(bobAddr);
 
@@ -301,7 +392,7 @@ async function main(): Promise<void> {
             {
                 ownerAddress: hexToBase64(aliceAddr),
                 handle: aliceHandle,
-                bio: 'Frontend builder looking for useful onchain feedback.'
+                bio: 'Guild operator and Canopy community reviewer.'
             },
             0n,
             height
@@ -318,7 +409,7 @@ async function main(): Promise<void> {
             {
                 ownerAddress: hexToBase64(bobAddr),
                 handle: bobHandle,
-                bio: 'Community mentor and protocol explainer.'
+                bio: 'Builder submitting proof for reputation and access.'
             },
             0n,
             height
@@ -327,27 +418,161 @@ async function main(): Promise<void> {
 
     height = await getHeight();
     await sendAndConfirm(
-        'give vibe',
+        'create Canopy Builders guild',
         aliceAddr,
         buildSignAndSendTx(
             aliceKey,
-            'give_vibe',
+            'create_guild',
             {
-                fromAddress: hexToBase64(aliceAddr),
-                toAddress: hexToBase64(bobAddr),
-                amount: 42,
-                tag: 'mentor',
-                note: 'Helped unblock a clean Canopy RPC demo.'
+                creatorAddress: hexToBase64(aliceAddr),
+                slug: guildSlug,
+                name: 'Canopy Builders',
+                description: 'A guild for builders who prove useful Social-Fi contributions.'
             },
             0n,
             height
         )
     );
 
-    await maybePrintStateHint([aliceHandle, bobHandle]);
+    height = await getHeight();
+    await sendAndConfirm(
+        'post quest',
+        aliceAddr,
+        buildSignAndSendTx(
+            aliceKey,
+            'post_quest',
+            {
+                creatorAddress: hexToBase64(aliceAddr),
+                guildId: 1,
+                title: 'Build and demo a Social-Fi appchain',
+                tag: 'builder',
+                rewardRep: 120
+            },
+            0n,
+            height
+        )
+    );
+
+    height = await getHeight();
+    await sendAndConfirm(
+        'submit proof',
+        bobAddr,
+        buildSignAndSendTx(
+            bobKey,
+            'submit_proof',
+            {
+                contributorAddress: hexToBase64(bobAddr),
+                guildId: 1,
+                questId: 1,
+                proofURI: 'https://github.com/6JKM9/impactguild-canopy',
+                note: 'Submitted repo, dashboard, and local demo flow.'
+            },
+            0n,
+            height
+        )
+    );
+
+    height = await getHeight();
+    await sendAndConfirm(
+        'attest contribution',
+        aliceAddr,
+        buildSignAndSendTx(
+            aliceKey,
+            'attest_contribution',
+            {
+                reviewerAddress: hexToBase64(aliceAddr),
+                proofId: 1,
+                amount: 120,
+                note: 'Approved as verified builder work.'
+            },
+            0n,
+            height
+        )
+    );
+
+    height = await getHeight();
+    await sendAndConfirm(
+        'issue badge',
+        aliceAddr,
+        buildSignAndSendTx(
+            aliceKey,
+            'issue_badge',
+            {
+                issuerAddress: hexToBase64(aliceAddr),
+                toAddress: hexToBase64(bobAddr),
+                guildId: 1,
+                badgeName: 'verified_builder',
+                badgeURI: 'ipfs://impactguild/verified-builder'
+            },
+            0n,
+            height
+        )
+    );
+
+    height = await getHeight();
+    await sendAndConfirm(
+        'create gate',
+        aliceAddr,
+        buildSignAndSendTx(
+            aliceKey,
+            'create_gate',
+            {
+                creatorAddress: hexToBase64(aliceAddr),
+                guildId: 1,
+                gateName: 'VIP Builders Room',
+                requiredRep: 100,
+                requiredBadge: 'verified_builder'
+            },
+            0n,
+            height
+        )
+    );
+
+    height = await getHeight();
+    await sendAndConfirm(
+        'check gate access',
+        bobAddr,
+        buildSignAndSendTx(
+            bobKey,
+            'check_gate_access',
+            {
+                visitorAddress: hexToBase64(bobAddr),
+                gateId: 1
+            },
+            0n,
+            height
+        )
+    );
+
+    height = await getHeight();
+    await sendAndConfirm(
+        'cast reputation vote',
+        bobAddr,
+        buildSignAndSendTx(
+            bobKey,
+            'cast_reputation_vote',
+            {
+                voterAddress: hexToBase64(bobAddr),
+                guildId: 1,
+                proposalId: 'launch-builder-bounties',
+                choice: 'yes'
+            },
+            0n,
+            height
+        )
+    );
+
+    await maybePrintStateHint([aliceHandle, bobHandle, guildSlug]);
     console.log('\nDemo complete');
     console.log('- Custom tx submitted: register_profile');
-    console.log('- Custom tx submitted: give_vibe');
+    console.log('- Custom tx submitted: create_guild');
+    console.log('- Custom tx submitted: post_quest');
+    console.log('- Custom tx submitted: submit_proof');
+    console.log('- Custom tx submitted: attest_contribution');
+    console.log('- Custom tx submitted: issue_badge');
+    console.log('- Custom tx submitted: create_gate');
+    console.log('- Custom tx submitted: check_gate_access');
+    console.log('- Custom tx submitted: cast_reputation_vote');
     console.log('- Local RPC ports used: 50002 and 50003');
 }
 

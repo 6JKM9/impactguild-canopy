@@ -1,51 +1,58 @@
-# VibeGraph Video Script
+# ImpactGuild Demo Video Script
 
-Target length: 60 to 90 seconds.
+Keep the video clean and direct. Record the browser and terminal side by side if possible.
 
-## One-Line Pitch
+## 0-5 seconds
 
-VibeGraph turns community thanks into portable onchain reputation.
+Open with the dashboard.
 
-## Recording Setup
+Say or show:
 
-Open two windows:
-
-- Left: `demo/vibegraph_dashboard.html`
-- Right: terminal in `plugin/typescript`
-
-Build first:
-
-```bash
-npm install
-npm run build:all
+```text
+ImpactGuild turns community work into portable onchain reputation, gated access, badges, and contribution-weighted governance.
 ```
 
-Start the local Canopy chain with the TypeScript plugin enabled, then run:
+## 5-20 seconds
+
+Click `Run Example Flow` on `impactguild_dashboard.html`.
+
+Show:
+
+- profiles
+- guild creation
+- quest posting
+- proof submission
+- contribution attestation
+- badge issuance
+- gate unlock
+- reputation-weighted vote
+
+## 20-45 seconds
+
+Switch to the terminal and run:
 
 ```bash
-npm run demo:vibegraph
+cd plugin/typescript
+npm run demo:impactguild
 ```
 
-## Talk Track
+The video should clearly show:
 
-1. "This is VibeGraph, a Social-Fi appchain built with the Canopy TypeScript template."
-2. "It adds two custom transaction types: register_profile and give_vibe."
-3. "First, the demo creates two local accounts through the Canopy admin RPC on port 50003."
-4. "Then it submits two register_profile transactions through the chain RPC on port 50002."
-5. "Finally, Alice gives Bob 42 vibe points tagged mentor. The plugin writes a profile update, a vibe attestation, and a counter update to onchain state."
-6. "The demo waits for each transaction to be included and prints the confirmed tx hashes."
+- local Canopy query RPC: `50002`
+- local Canopy admin RPC: `50003`
+- submitted txs:
+  - `register_profile`
+  - `create_guild`
+  - `post_quest`
+  - `submit_proof`
+  - `attest_contribution`
+  - `issue_badge`
+  - `create_gate`
+  - `check_gate_access`
+  - `cast_reputation_vote`
 
-## What To Show
+## Closing
 
-- The dashboard's RPC height check.
-- The terminal output showing profile registration tx hashes.
-- The terminal output showing the give_vibe tx hash.
-- The final line: "Custom tx submitted: register_profile" and "Custom tx submitted: give_vibe".
+End on the dashboard or terminal summary.
 
-## Submission Text
-
-Pitch: VibeGraph turns community thanks into portable onchain reputation.
-
-Built with: Canopy TypeScript plugin template.
-
-Custom txs: register_profile, give_vibe.
+Do not leave the screen recorder control panel covering the app.
