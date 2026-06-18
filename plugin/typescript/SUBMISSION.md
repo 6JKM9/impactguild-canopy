@@ -53,6 +53,12 @@ npm run build:all
 npm run demo:impactguild
 ```
 
+For the cleanest recording, run this on a fresh local chain so the first guild, quest, proof, and gate IDs are `1`. If you are reusing a chain, override the IDs:
+
+```bash
+IMPACTGUILD_DEMO_GUILD_ID=2 IMPACTGUILD_DEMO_QUEST_ID=2 IMPACTGUILD_DEMO_PROOF_ID=2 IMPACTGUILD_DEMO_GATE_ID=2 npm run demo:impactguild
+```
+
 ## Suggested Discord Submission
 
 ```text

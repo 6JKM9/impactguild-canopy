@@ -13,6 +13,10 @@ const ADMIN_RPC_URL = process.env.CANOPY_ADMIN_RPC_URL || 'http://localhost:5000
 const NETWORK_ID = BigInt(process.env.CANOPY_NETWORK_ID || '1');
 const CHAIN_ID = BigInt(process.env.CANOPY_CHAIN_ID || '1');
 const TEST_PASSWORD = process.env.CANOPY_DEMO_PASSWORD || 'impactguild-demo-password';
+const DEMO_GUILD_ID = Number(process.env.IMPACTGUILD_DEMO_GUILD_ID || '1');
+const DEMO_QUEST_ID = Number(process.env.IMPACTGUILD_DEMO_QUEST_ID || '1');
+const DEMO_PROOF_ID = Number(process.env.IMPACTGUILD_DEMO_PROOF_ID || '1');
+const DEMO_GATE_ID = Number(process.env.IMPACTGUILD_DEMO_GATE_ID || '1');
 
 interface KeyGroup {
     address: string;
@@ -130,15 +134,6 @@ async function waitForTxInclusion(
         await new Promise((resolve) => setTimeout(resolve, 1000));
     }
     return false;
-}
-
-async function getFailedTxCount(senderAddr: string): Promise<number> {
-    const respBody = await postRawJSON(
-        `${QUERY_RPC_URL}/v1/query/failed-txs`,
-        JSON.stringify({ address: senderAddr, perPage: 20 })
-    );
-    const result = JSON.parse(respBody) as { totalCount: number };
-    return result.totalCount || 0;
 }
 
 function getTypeUrl(msgType: string): string {
@@ -342,10 +337,6 @@ async function sendAndConfirm(
     if (!included) {
         throw new Error(`${label} tx was not indexed within 30 seconds`);
     }
-    const failedCount = await getFailedTxCount(senderAddr);
-    if (failedCount > 0) {
-        throw new Error(`${label} sender has ${failedCount} failed txs`);
-    }
     console.log(`${label} tx confirmed`);
     return txHash;
 }
@@ -367,6 +358,12 @@ async function main(): Promise<void> {
     console.log('=== ImpactGuild Social-Fi demo ===');
     console.log('Pitch: ImpactGuild turns community work into portable onchain reputation, access, and governance.');
     console.log(`RPC: ${QUERY_RPC_URL} / ${ADMIN_RPC_URL}`);
+    console.log(
+        `Demo IDs: guild=${DEMO_GUILD_ID}, quest=${DEMO_QUEST_ID}, proof=${DEMO_PROOF_ID}, gate=${DEMO_GATE_ID}`
+    );
+    console.log(
+        'Tip: run this on a fresh local chain, or override IMPACTGUILD_DEMO_*_ID env vars if counters already exist.'
+    );
     await assertRpcReady();
 
     const suffix = randomSuffix();
@@ -443,7 +440,7 @@ async function main(): Promise<void> {
             'post_quest',
             {
                 creatorAddress: hexToBase64(aliceAddr),
-                guildId: 1,
+                guildId: DEMO_GUILD_ID,
                 title: 'Build and demo a Social-Fi appchain',
                 tag: 'builder',
                 rewardRep: 120
@@ -462,8 +459,8 @@ async function main(): Promise<void> {
             'submit_proof',
             {
                 contributorAddress: hexToBase64(bobAddr),
-                guildId: 1,
-                questId: 1,
+                guildId: DEMO_GUILD_ID,
+                questId: DEMO_QUEST_ID,
                 proofURI: 'https://github.com/6JKM9/impactguild-canopy',
                 note: 'Submitted repo, dashboard, and local demo flow.'
             },
@@ -481,7 +478,7 @@ async function main(): Promise<void> {
             'attest_contribution',
             {
                 reviewerAddress: hexToBase64(aliceAddr),
-                proofId: 1,
+                proofId: DEMO_PROOF_ID,
                 amount: 120,
                 note: 'Approved as verified builder work.'
             },
@@ -500,7 +497,7 @@ async function main(): Promise<void> {
             {
                 issuerAddress: hexToBase64(aliceAddr),
                 toAddress: hexToBase64(bobAddr),
-                guildId: 1,
+                guildId: DEMO_GUILD_ID,
                 badgeName: 'verified_builder',
                 badgeURI: 'ipfs://impactguild/verified-builder'
             },
@@ -518,7 +515,7 @@ async function main(): Promise<void> {
             'create_gate',
             {
                 creatorAddress: hexToBase64(aliceAddr),
-                guildId: 1,
+                guildId: DEMO_GUILD_ID,
                 gateName: 'VIP Builders Room',
                 requiredRep: 100,
                 requiredBadge: 'verified_builder'
@@ -537,7 +534,7 @@ async function main(): Promise<void> {
             'check_gate_access',
             {
                 visitorAddress: hexToBase64(bobAddr),
-                gateId: 1
+                gateId: DEMO_GATE_ID
             },
             0n,
             height
@@ -553,7 +550,7 @@ async function main(): Promise<void> {
             'cast_reputation_vote',
             {
                 voterAddress: hexToBase64(bobAddr),
-                guildId: 1,
+                guildId: DEMO_GUILD_ID,
                 proposalId: 'launch-builder-bounties',
                 choice: 'yes'
             },

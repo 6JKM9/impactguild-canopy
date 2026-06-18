@@ -414,6 +414,38 @@ export function FromAny(any: any): [any | null, string | null, IPluginError | nu
         if (typeUrl.includes('MessageGiveVibe')) {
             return [types.MessageGiveVibe.decode(any.value), 'MessageGiveVibe', null];
         }
+        if (typeUrl.includes('MessageCreateGuild')) {
+            return [types.MessageCreateGuild.decode(any.value), 'MessageCreateGuild', null];
+        }
+        if (typeUrl.includes('MessagePostQuest')) {
+            return [types.MessagePostQuest.decode(any.value), 'MessagePostQuest', null];
+        }
+        if (typeUrl.includes('MessageSubmitProof')) {
+            return [types.MessageSubmitProof.decode(any.value), 'MessageSubmitProof', null];
+        }
+        if (typeUrl.includes('MessageAttestContribution')) {
+            return [
+                types.MessageAttestContribution.decode(any.value),
+                'MessageAttestContribution',
+                null
+            ];
+        }
+        if (typeUrl.includes('MessageIssueBadge')) {
+            return [types.MessageIssueBadge.decode(any.value), 'MessageIssueBadge', null];
+        }
+        if (typeUrl.includes('MessageCreateGate')) {
+            return [types.MessageCreateGate.decode(any.value), 'MessageCreateGate', null];
+        }
+        if (typeUrl.includes('MessageCheckGateAccess')) {
+            return [types.MessageCheckGateAccess.decode(any.value), 'MessageCheckGateAccess', null];
+        }
+        if (typeUrl.includes('MessageCastReputationVote')) {
+            return [
+                types.MessageCastReputationVote.decode(any.value),
+                'MessageCastReputationVote',
+                null
+            ];
+        }
         return [null, null, ErrInvalidMessageCast()];
     } catch (err) {
         return [null, null, ErrFromAny(err as Error)];
